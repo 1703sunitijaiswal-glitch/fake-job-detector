@@ -30,7 +30,7 @@ st.markdown("""
 st.sidebar.title("🕵️ Fake Job Detector")
 page = st.sidebar.radio("Navigate", ["Home", "Model Performance"])
 
-# ================= LOAD & TRAIN MODEL (CACHED) =================
+# ================= LOAD & TRAIN MODEL =================
 @st.cache_resource
 def load_and_train_model():
 
@@ -78,10 +78,10 @@ def load_and_train_model():
 
     return model, vectorizer, X_test, y_test
 
-# Load cached model
+# Load model
 model, vectorizer, X_test, y_test = load_and_train_model()
 
-# Predictions
+# Predictions for evaluation
 y_pred = model.predict(X_test)
 y_prob = model.predict_proba(X_test)[:, 1]
 
@@ -99,9 +99,27 @@ if page == "Home":
             st.warning("⚠️ Please enter some text first!")
 
         else:
-            input_vec = vectorizer.transform([user_input])
-            prediction = model.predict(input_vec)[0]
-            probability = model.predict_proba(input_vec)[0][1]
+
+            # ===== RULE BASED CHECK =====
+            scam_words = [
+                "fee", "deposit", "registration fee",
+                "security amount", "verification charges",
+                "pay", "payment", "whatsapp",
+                "urgent hiring", "no interview",
+                "refundable", "processing fee"
+            ]
+
+            user_lower = user_input.lower()
+            rule_based_flag = any(word in user_lower for word in scam_words)
+
+            # ===== HYBRID LOGIC =====
+            if rule_based_flag:
+                prediction = 1
+                probability = 0.95
+            else:
+                input_vec = vectorizer.transform([user_input])
+                prediction = model.predict(input_vec)[0]
+                probability = model.predict_proba(input_vec)[0][1]
 
             real_score = (1 - probability) * 100
 
@@ -138,7 +156,6 @@ elif page == "Model Performance":
     st.write(f"Precision: {precision*100:.2f}%")
     st.write(f"Recall: {recall*100:.2f}%")
 
-    # Confusion Matrix
     st.subheader("📉 Confusion Matrix")
 
     cm = confusion_matrix(y_test, y_pred)
@@ -158,7 +175,6 @@ elif page == "Model Performance":
     plt.title("Confusion Matrix")
     st.pyplot(fig)
 
-    # ROC Curve
     st.subheader("📈 ROC Curve")
 
     fpr, tpr, _ = roc_curve(y_test, y_prob)
