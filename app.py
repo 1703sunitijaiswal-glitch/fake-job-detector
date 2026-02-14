@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import SGDClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     accuracy_score,
@@ -36,7 +36,6 @@ def load_and_train_model():
 
     data = pd.read_csv("fake_job_postings_small.csv")
 
-
     data = data.dropna(
         subset=["title", "description", "requirements", "company_profile"],
         how="all"
@@ -54,7 +53,7 @@ def load_and_train_model():
 
     vectorizer = TfidfVectorizer(
         stop_words="english",
-        max_features=8000,
+        max_features=15000,
         ngram_range=(1,2)
     )
 
@@ -68,7 +67,13 @@ def load_and_train_model():
         stratify=y
     )
 
-    model = LogisticRegression(max_iter=1000, class_weight="balanced")
+    model = SGDClassifier(
+        loss="log_loss",
+        class_weight="balanced",
+        max_iter=2000,
+        random_state=42
+    )
+
     model.fit(X_train, y_train)
 
     return model, vectorizer, X_test, y_test
@@ -168,4 +173,3 @@ elif page == "Model Performance":
     ax2.legend()
 
     st.pyplot(fig2)
-
