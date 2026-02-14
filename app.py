@@ -34,7 +34,8 @@ page = st.sidebar.radio("Navigate", ["Home", "Model Performance"])
 @st.cache_resource
 def load_and_train_model():
 
-    data = pd.read_csv("fake_job_postings.csv")
+    data = pd.read_csv("fake_job_postings_small.csv")
+
 
     data = data.dropna(
         subset=["title", "description", "requirements", "company_profile"],
@@ -167,3 +168,4 @@ elif page == "Model Performance":
     ax2.legend()
 
     st.pyplot(fig2)
+
